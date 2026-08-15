@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Datos personales locales de Athena
+data/memory.json
+
+# Secretos
+.env
+
