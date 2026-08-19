@@ -39,8 +39,12 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
         self.assertIn("¿Cómo me llamo?", prompt)
 
     @patch("builtins.print")
-    @patch("builtins.input", return_value="Hola")
-    def test_chat_sends_prompt_with_memory_to_llm(self, mock_input, mock_print) -> None:
+    @patch("builtins.input", side_effect=["Hola", "salir"])
+    def test_chat_sends_prompt_with_memory_to_llm(
+        self,
+        mock_input, 
+        mock_print
+    ) -> None:
         self.athena.memory.save("nombre", "Andrea")
 
         self.athena.chat()
@@ -48,4 +52,32 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
         self.assertEqual(len(self.llm.prompts), 1)
         self.assertIn('"nombre": "Andrea"', self.llm.prompts[0])
         self.assertIn("Pregunta del usuario:\nHola", self.llm.prompts[0])
-        mock_print.assert_called_once_with("\nAthena: ", "Respuesta simulada")
+        mock_print.assert_any_call("\nAthena: ", "Respuesta simulada")
+        mock_print.assert_any_call("Athena: Hasta pronto.")
+
+    def test_remember_saves_a_new_value(self) -> None:
+        self.athena.remember("ciudad = Madrid")
+
+        self.assertEqual(
+            self.athena.memory.get("ciudad"),
+            "Madrid"
+        )
+
+    def test_remember_updates_an_existing_value(self) -> None:
+        self.athena.memory.save("ciudad", "Madrid")
+
+        self.athena.remember("ciudad = Valencia")
+
+        self.assertEqual(
+            self.athena.memory.get("ciudad"),
+            "Valencia"
+        )
+
+    def test_forget_deletes_an_existing_value(self) -> None:
+        self.athena.memory.save("ciudad", "Madrid")
+
+        self.athena.forget("ciudad")
+
+        self.assertIsNone(
+            self.athena.memory.get("ciudad")
+        )

@@ -40,6 +40,49 @@ class Athena:
             f"Memoria persistente:\n{memory_context}\n\n"
             f"Pregunta del usuario:\n{question}"
         )
+
+    def show_memory(self) -> None:
+        if not self.memory.data:
+            print("Athena: No tengo recuerdos guardados.")
+            return
+
+        print("Athena: Esto es lo que recuerdo:")
+
+        for key, value in self.memory.data.items():
+            print(f"- {key}: {value}")
+
+    def remember(self, content: str) -> None:
+        key, separator, value = content.partition("=")
+
+        key = key.strip().lower()
+        value = value.strip()
+
+        if not separator or not key or not value:
+            print("Athena: Usa el formato: recuerda clave = valor")
+            return
+
+        if key in self.memory.data:
+            self.memory.update(key, value)
+        else:
+            self.memory.save(key, value)
+
+        print(f'Athena: He guardado "{key}".')
+
+    def forget(self, key: str) -> None:
+        key = key.strip().lower()
+
+        if not key:
+            print("Athena: Usa el formato: olvida clave")
+            return
+
+        try:
+            self.memory.delete(key)
+        except KeyError:
+            print(f'Athena: No tengo ningún recuerdo llamado "{key}".')
+            return
+
+        print(f'Athena: He olvidado "{key}".')
+            
     def chat(self):
 
         try:
@@ -48,6 +91,20 @@ class Athena:
                 pregunta = input("Tú: ")
 
                 comando = pregunta.strip().lower()
+
+                if comando == "memoria":
+                    self.show_memory()
+                    continue
+
+                if comando.startswith("recuerda "):
+                    content = pregunta.strip()[len("recuerda "):]
+                    self.remember(content)
+                    continue
+
+                if comando == "olvida" or comando.startswith("olvida "):
+                    key = pregunta.strip()[len("olvida"):].strip()
+                    self.forget(key)
+                    continue
 
                 if comando == "salir":
                     print("Athena: Hasta pronto.")
@@ -59,3 +116,6 @@ class Athena:
 
         except KeyboardInterrupt:
             print("\nAthena: Hasta pronto.")
+
+
+
