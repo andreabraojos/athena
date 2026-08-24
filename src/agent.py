@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+from datetime import date
 
 try:
     from .llm import LLM
@@ -94,14 +95,22 @@ class Athena:
 
         print(f'Athena: He olvidado "{key}".')
 
-    def add_task(self, title: str) -> None:
+    def add_task(self, content: str) -> None:
+        title, separator, due_date = content.partition("|")
+
+        title = title.strip()
+        due_date = due_date.strip() if separator else None
+
         try:
-            self.tasks.add(title)
+            self.tasks.add(title, due_date)
         except ValueError:
-            print("Athena: Usa el formato: tarea añade título")
+            print(
+                "Athena: Usa el formato: " \
+                "tarea añade título | YYYY-MM-DD"
+            )
             return
 
-        print(f'Athena: He añadido la tarea "{title.strip()}".')
+        print(f'Athena: He añadido la tarea "{title}".')
 
     def show_tasks(self) -> None:
         tasks = self.tasks.list_all()
@@ -141,7 +150,31 @@ class Athena:
             return
 
         print(f"Athena: He eliminado la tarea {task_id}.")
-    
+
+    def show_pending_tasks(self) -> None:
+        tasks = self.tasks.pending()
+
+        if not tasks:
+            print("Athena: No tienes tareas pendientes.")
+            return
+
+        print("Athena: Estas son tus tareas pendientes:")
+
+        for task in tasks:
+            print(f'- [{task["id"]}] {task["title"]}')
+
+    def show_today_tasks(self) -> None:
+        today = date.today().isoformat()
+        tasks = self.tasks.due_on(today)
+
+        if not tasks:
+            print("Athena: No tienes tareas pendientes para hoy.")
+            return
+
+        print("Athena: Estas son tus tareas para hoy:")
+
+        for task in tasks:
+            print(f'- [{task["id"]}] {task["title"]}')    
             
     def chat(self):
 
@@ -167,8 +200,8 @@ class Athena:
                     continue
 
                 if comando == "tarea añade" or comando.startswith("tarea añade"):
-                    title = pregunta.strip()[len("tarea añade"):].strip()
-                    self.add_task(title)
+                    content = pregunta.strip()[len("tarea añade"):].strip()
+                    self.add_task(content)
                     continue
 
                 if comando == "tareas":
@@ -183,6 +216,14 @@ class Athena:
                 if comando == "tarea elimina" or comando.startswith("tarea elimina "):
                     task_id_text = pregunta.strip()[len("tarea elimina"):].strip()
                     self.delete_task(task_id_text)
+                    continue
+
+                if comando == "pendientes":
+                    self.show_pending_tasks()
+                    continue
+
+                if comando == "hoy":
+                    self.show_today_tasks()
                     continue
 
 

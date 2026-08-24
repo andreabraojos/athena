@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any
+from datetime import date
 
 
 class TaskManager:
@@ -10,11 +11,23 @@ class TaskManager:
         self.tasks: list[dict[str, Any]] = []
         self.load()
 
-    def add(self, title: str) -> None:
+    def add(
+        self,
+        title: str,
+        due_date: str | None = None
+    ) -> None:
         title = title.strip()
 
         if not title:
             raise ValueError("El título de la tarea no puede estar vacío.")
+
+        if due_date is not None:
+            try:
+                date.fromisoformat(due_date)
+            except ValueError as error:
+                raise ValueError(
+                    "La fecha debe tener formato YYYY-MM-DD."
+                ) from error
 
         next_id = max(
             (task["id"] for task in self.tasks),
@@ -24,7 +37,8 @@ class TaskManager:
         task = {
             "id": next_id,
             "title": title,
-            "completed": False
+            "completed": False,
+            "due_date": due_date
         }
 
         self.tasks.append(task)
@@ -55,6 +69,23 @@ class TaskManager:
         raise KeyError(
             f"No se ha encontrado la tarea con ID {task_id}."
         )
+
+    def pending(self) -> list[dict[str, Any]]:
+        return[
+            task.copy()
+            for task in self.tasks
+            if not task["completed"]
+        ]
+
+    def due_on(self, due_date: str) -> list[dict[str, Any]]:
+        return[
+            task.copy()
+            for task in self.tasks
+            if(
+                not task["completed"]
+                and task.get("due_date") == due_date
+            )
+        ]
 
     def load(self) -> None:
         self.file_path.parent.mkdir(

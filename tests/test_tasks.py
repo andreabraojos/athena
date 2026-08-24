@@ -29,7 +29,8 @@ class TestTaskManager(unittest.TestCase):
                 {
                     "id": 1,
                     "title": "Estudiar inglés",
-                    "completed": False
+                    "completed": False,
+                    "due_date": None
                 }
             ]
         )
@@ -45,7 +46,8 @@ class TestTaskManager(unittest.TestCase):
                 {
                     "id":1,
                     "title": "Estudiar inglés",
-                    "completed": False
+                    "completed": False,
+                    "due_date": None
                 }
             ]
         )
@@ -103,3 +105,41 @@ class TestTaskManager(unittest.TestCase):
 
         self.assertEqual(recovered_tasks.tasks, [])
 
+    def test_add_saves_a_due_date(self) -> None:
+        self.tasks.add(
+            "Entregar proyecto",
+            due_date="2026-08-25"
+        )
+
+        self.assertEqual(
+            self.tasks.tasks[0]["due_date"],
+            "2026-08-25"
+        )
+
+    def test_add_rejects_an_invalid_due_date(self) -> None:
+        with self.assertRaises(ValueError):
+            self.tasks.add(
+                "Entregar proyecto",
+                due_date="25-08-2026"
+            )
+
+    def test_pending_excludes_completed_tasks(self) -> None:
+        self.tasks.add("Pendiente")
+        self.tasks.add("Completada")
+        self.tasks.complete(2)
+
+        self.assertEqual(
+            self.tasks.pending()[0]["title"],
+            "Pendiente"
+        )
+
+    def test_due_on_returns_only_pending_tasks_for_that_date(self) -> None:
+        self.tasks.add("Tarea de hoy", due_date="2026-08-24")
+        self.tasks.add("Tarea de mañana", due_date="2026-08-25")
+        self.tasks.add("Completada", due_date="2026-08-24")
+        self.tasks.complete(3)
+
+        tasks = self.tasks.due_on("2026-08-24")
+
+        self.assertEqual(len(tasks), 1)
+        self.assertEqual(tasks[0]["title"], "Tarea de hoy")

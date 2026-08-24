@@ -109,7 +109,8 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
                 {
                     "id":1,
                     "title": "Estudiar inglés",
-                    "completed": False
+                    "completed": False,
+                    "due_date": None
                 }
             ]
         )
