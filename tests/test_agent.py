@@ -21,10 +21,15 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
         self.temp_directory = tempfile.TemporaryDirectory()
         self.memory_path = Path(self.temp_directory.name) / "memory.json"
         self.llm = FakeLLM()
+        self.tasks_path = (
+            Path(self.temp_directory.name) / "tasks.json"
+        )
 
         self.athena = Athena(
             llm=self.llm,
-            memory_path=self.memory_path
+            memory_path=self.memory_path,
+            tasks_path=self.tasks_path
+
         )
 
     def tearDown(self) -> None:
@@ -80,4 +85,31 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
 
         self.assertIsNone(
             self.athena.memory.get("ciudad")
+        )
+
+    def test_athena_starts_with_an_empty_task_manager(self) -> None:
+        self.assertEqual(self.athena.tasks.list_all(), [])
+
+    @patch("builtins.print")
+    @patch(
+        "builtins.input",
+        side_effect=["tarea añade Estudiar inglés", "salir"]
+    )
+
+    def test_chat_adds_a_task(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        self.assertEqual(
+            self.athena.tasks.list_all(),
+            [
+                {
+                    "id":1,
+                    "title": "Estudiar inglés",
+                    "completed": False
+                }
+            ]
         )

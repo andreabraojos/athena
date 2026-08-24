@@ -31,13 +31,30 @@ class TaskManager:
         self.save_to_disk()
 
     def list_all(self) -> list[dict[str, Any]]:
-        pass
+        return [task.copy() for task in self.tasks]
 
     def complete(self, task_id: int) -> None:
-        pass
+        for task in self.tasks:
+            if task["id"] == task_id:
+                task["completed"] = True
+                self.save_to_disk()
+                return
+
+
+        raise KeyError(
+            f"No se ha encontrado la tarea con ID {task_id}."
+            )
 
     def delete(self, task_id: int) -> None:
-        pass
+        for task in self.tasks:
+            if task["id"] == task_id:
+                self.tasks.remove(task)
+                self.save_to_disk()
+                return
+
+        raise KeyError(
+            f"No se ha encontrado la tarea con ID {task_id}."
+        )
 
     def load(self) -> None:
         self.file_path.parent.mkdir(

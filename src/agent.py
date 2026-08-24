@@ -4,9 +4,11 @@ import json
 try:
     from .llm import LLM
     from .memory import Memory
+    from .tasks import TaskManager
 except ImportError:
     from llm import LLM
     from memory import Memory
+    from tasks import TaskManager
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -17,11 +19,20 @@ class Athena:
     Coordina todos los componentes del sistema.
     """
 
-    def __init__(self, llm: LLM | None = None, memory_path: Path | None = None):
+    def __init__(
+        self,
+        llm: LLM | None = None,
+        memory_path: Path | None = None, 
+        tasks_path: Path | None = None
+    ):
         print("Inicializando Athena...")
         self.llm = llm or LLM()
 
         self.memory = Memory(memory_path or PROJECT_ROOT / "data" / "memory.json")
+
+        self.tasks = TaskManager(
+            tasks_path or PROJECT_ROOT / "data" / "tasks.json"
+        )
 
     def build_prompt(self, question: str) -> str:
         """Construye el prompt con el contexto persistente disponible."""
@@ -82,6 +93,55 @@ class Athena:
             return
 
         print(f'Athena: He olvidado "{key}".')
+
+    def add_task(self, title: str) -> None:
+        try:
+            self.tasks.add(title)
+        except ValueError:
+            print("Athena: Usa el formato: tarea añade título")
+            return
+
+        print(f'Athena: He añadido la tarea "{title.strip()}".')
+
+    def show_tasks(self) -> None:
+        tasks = self.tasks.list_all()
+
+        if not tasks:
+            print("Athena: No tienes tareas guardadas.")
+            return
+
+        print("Athena: Estas son tus tareas:")
+
+        for task in tasks:
+            status = "✓" if task["completed"] else " "
+            print(f'- [{status}] {task["id"]}: {task["title"]}')
+
+    def complete_task(self, task_id_text: str) -> None:
+        try:
+            task_id = int(task_id_text)
+            self.tasks.complete(task_id)
+        except ValueError:
+            print("Athena: Usa el formato: tarea completa id")
+            return
+        except KeyError:
+            print(f'Athena: No existe una tarea con ID {task_id_text}.')
+            return
+
+        print(f"Athena: He completado la tarea {task_id}.")
+
+    def delete_task(self, task_id_text: str) -> None:
+        try:
+            task_id = int(task_id_text)
+            self.tasks.delete(task_id)
+        except ValueError:
+            print("Athena: Usa el formato: tarea eliminada id")
+            return
+        except KeyError:
+            print(f'Athena: No existe una tarea con ID {task_id_text}.')
+            return
+
+        print(f"Athena: He eliminado la tarea {task_id}.")
+    
             
     def chat(self):
 
@@ -105,6 +165,26 @@ class Athena:
                     key = pregunta.strip()[len("olvida"):].strip()
                     self.forget(key)
                     continue
+
+                if comando == "tarea añade" or comando.startswith("tarea añade"):
+                    title = pregunta.strip()[len("tarea añade"):].strip()
+                    self.add_task(title)
+                    continue
+
+                if comando == "tareas":
+                    self.show_tasks()
+                    continue
+
+                if comando == "tarea completa" or comando.startswith("tarea completa "):
+                    task_id_text = pregunta.strip()[len("tarea completa"):].strip()
+                    self.complete_task(task_id_text)
+                    continue
+
+                if comando == "tarea elimina" or comando.startswith("tarea elimina "):
+                    task_id_text = pregunta.strip()[len("tarea elimina"):].strip()
+                    self.delete_task(task_id_text)
+                    continue
+
 
                 if comando == "salir":
                     print("Athena: Hasta pronto.")

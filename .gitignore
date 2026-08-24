@@ -6,6 +6,7 @@ venv/
 
 # Datos personales locales de Athena
 data/memory.json
+data/tasks.json
 
 # Secretos
 .env
