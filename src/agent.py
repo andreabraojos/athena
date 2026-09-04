@@ -112,6 +112,19 @@ class Athena:
 
         print(f'Athena: He añadido la tarea "{title}".')
 
+    def format_task(self, task: dict) -> str:
+        status = "✓" if task["completed"] else " "
+        due_date = task.get("due_date")
+        if due_date:
+            due_text = f" | fecha: {due_date}"
+        else:
+            due_text = ""
+
+        return (
+            f'- [{status}] {task["id"]}: '
+            f'{task["title"]}{due_text}'
+        )
+
     def show_tasks(self) -> None:
         tasks = self.tasks.list_all()
 
@@ -122,8 +135,7 @@ class Athena:
         print("Athena: Estas son tus tareas:")
 
         for task in tasks:
-            status = "✓" if task["completed"] else " "
-            print(f'- [{status}] {task["id"]}: {task["title"]}')
+            print(self.format_task(task))
 
     def complete_task(self, task_id_text: str) -> None:
         try:
@@ -161,7 +173,7 @@ class Athena:
         print("Athena: Estas son tus tareas pendientes:")
 
         for task in tasks:
-            print(f'- [{task["id"]}] {task["title"]}')
+            print(self.format_task(task))
 
     def show_today_tasks(self) -> None:
         today = date.today().isoformat()
@@ -174,7 +186,7 @@ class Athena:
         print("Athena: Estas son tus tareas para hoy:")
 
         for task in tasks:
-            print(f'- [{task["id"]}] {task["title"]}')    
+            print(self.format_task(task))  
             
     def chat(self):
 
@@ -199,7 +211,7 @@ class Athena:
                     self.forget(key)
                     continue
 
-                if comando == "tarea añade" or comando.startswith("tarea añade"):
+                if comando == "tarea añade" or comando.startswith("tarea añade "):
                     content = pregunta.strip()[len("tarea añade"):].strip()
                     self.add_task(content)
                     continue
@@ -237,6 +249,8 @@ class Athena:
 
         except KeyboardInterrupt:
             print("\nAthena: Hasta pronto.")
+
+
 
 
 
