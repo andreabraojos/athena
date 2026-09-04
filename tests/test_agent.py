@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from src.agent import Athena
 
@@ -114,3 +114,209 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
                 }
             ]
         )
+
+    @patch("builtins.print")
+    @patch(
+        "builtins.input",
+        side_effect=["tareas", "salir"]
+    )
+    def test_chat_shows_tasks_with_due_date(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.tasks.add(
+            "Entregar proyecto inglés",
+            due_date= "2026-08-25")
+
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+             "- [ ] 1: Entregar proyecto inglés | fecha: 2026-08-25")
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["tarea completa 1", "salir"])
+    def test_chat_completes_a_task(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.tasks.add("Estudiar francés", due_date="2026-08-26")
+
+        self.athena.chat()
+
+        tasks = self.athena.tasks.list_all()
+
+        self.assertTrue(tasks[0]["completed"])
+
+        mock_print.assert_any_call(
+            "Athena: He completado la tarea 1."
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["tarea elimina 1", "salir"])
+    def test_chat_deletes_a_task(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.tasks.add("Estudiar francés", due_date="2026-08-26")
+
+        self.athena.chat()
+
+        self.assertEqual(self.athena.tasks.list_all(), [])
+
+        mock_print.assert_any_call(
+            "Athena: He eliminado la tarea 1."
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["pendientes", "salir"])
+    def test_chat_shows_only_pending_tasks(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.tasks.add("Estudiar inglés")
+        self.athena.tasks.add("Estudiar francés")
+
+        self.athena.tasks.complete(2)
+
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "- [ ] 1: Estudiar inglés"
+        )
+
+        self.assertNotIn(
+            call("- [✓] 2: Estudiar francés"),
+            mock_print.call_args_list
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["hoy", "salir"])
+    @patch("src.agent.date")
+    def test_chat_shows_only_pending_tasks_due_today(
+        self,
+        mock_date,
+        mock_input,
+        mock_print
+    ) -> None:
+        mock_date.today.return_value.isoformat.return_value = (
+            "2026-09-04"
+        )
+
+        self.athena.tasks.add(
+            "Tarea de hoy",
+            due_date="2026-09-04"
+        )
+
+        self.athena.tasks.add(
+            "Tarea de mañana",
+            due_date="2026-09-05"
+        )
+
+        self.athena.tasks.add(
+            "Tarea completada",
+            due_date="2026-09-04"
+        )
+        self.athena.tasks.complete(3)
+
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "- [ ] 1: Tarea de hoy | fecha: 2026-09-04"
+        )
+
+        self.assertNotIn(
+            call(
+                "- [ ] 2: Tarea de mañana | fecha: 2026-09-05"
+            ),
+            mock_print.call_args_list
+        )
+
+        self.assertNotIn(
+            call(
+                "- [✓] 3: Tarea completada | fecha: 2026-09-04"
+            ),
+            mock_print.call_args_list
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["tarea añade Entregar proyecto | 2026-09-10",
+                                          "salir"])
+    def test_chat_adds_a_task_with_due_date(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        self.assertEqual(
+            self.athena.tasks.list_all(),
+            [            
+                {
+                    "id":1,
+                    "title": "Entregar proyecto",
+                    "completed": False,
+                    "due_date": "2026-09-10"
+                }
+            ]
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["tarea completa 999", "salir"])
+    def test_chat_handles_unknown_task_id(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: No existe una tarea con ID 999."
+        )
+
+        mock_print.assert_any_call(
+            "Athena: Hasta pronto."
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["tarea añade Entregar proyecto | 10-09-2026", "salir"])
+    def test_chat_handles_invalid_task_date(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: "
+            "tarea añade título | YYYY-MM-DD"
+        )
+
+        self.assertEqual(
+            self.athena.tasks.list_all(), []
+        )
+
+        mock_print.assert_any_call(
+            "Athena: Hasta pronto."
+        )
+
+        self.assertEqual(self.llm.prompts, [])
+
+                
+    
+
