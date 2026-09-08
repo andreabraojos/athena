@@ -1,9 +1,22 @@
 import requests
 
+try:
+    from .config import LLMConfig, load_llm_config
+except ImportError:
+    from config import LLMConfig, load_llm_config
+
+
 class LLM:
-    def __init__(self):
-        self.url = "http://localhost:11434/api/generate"
-        self.model = "qwen3:8b"
+    def __init__(
+            self,
+            config: LLMConfig | None = None
+    ) -> None:
+        config = config or load_llm_config()
+
+        self.url = config.url
+        self.model = config.model
+        self.timeout = config.timeout
+
 
     def generate(self, prompt):
 
@@ -18,7 +31,7 @@ class LLM:
         response = requests.post(
             self.url,
             json=payload,
-            timeout=120
+            timeout=self.timeout
         )
 
         print("Código: ", response.status_code)
