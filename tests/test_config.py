@@ -50,3 +50,15 @@ class TestLLMConfig(unittest.TestCase):
             "ATHENA_OLLAMA_TIMEOUT debe ser un número"
         ):
             load_llm_config()
+
+    @patch.dict(
+        os.environ,
+        {"ATHENA_OLLAMA_TIMEOUT": "0"},
+        clear=True
+    )
+    def test_rejects_a_non_positive_timeout(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "ATHENA_OLLAMA_TIMEOUT debe ser mayor que cero"
+        ):
+            load_llm_config()

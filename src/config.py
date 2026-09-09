@@ -33,6 +33,11 @@ def load_llm_config() -> LLMConfig:
             "ATHENA_OLLAMA_TIMEOUT debe ser un número"
         ) from error
 
+    if timeout <= 0:
+        raise ValueError(
+            "ATHENA_OLLAMA_TIMEOUT debe ser mayor que cero"
+        )
+
     return LLMConfig(
         url=url,
         model=model,

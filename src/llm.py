@@ -6,6 +6,10 @@ except ImportError:
     from config import LLMConfig, load_llm_config
 
 
+class LLMError(Exception):
+    """Error controlado al comunicarse con el modelo."""
+
+
 class LLM:
     def __init__(
             self,
@@ -28,14 +32,28 @@ class LLM:
         
         print("Enviando petición...")
 
-        response = requests.post(
-            self.url,
-            json=payload,
-            timeout=self.timeout
-        )
+        try:
+            response = requests.post(
+                self.url,
+                json=payload,
+                timeout=self.timeout
+            )
+        except requests.Timeout as error:
+            raise LLMError(
+                "Ollama ha tardado demasiado en responder."
+            ) from error
+        except requests.ConnectionError as error:
+            raise LLMError(
+                "No se pudo conectar con Ollama."
+            ) from error
 
         print("Código: ", response.status_code)
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as error:
+            raise LLMError(
+                "Ollama ha devuelto un error HTTP."
+            ) from error
 
         return response.json()["response"]
