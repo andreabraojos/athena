@@ -137,3 +137,132 @@ class TestLLM(unittest.TestCase):
             "Ollama ha devuelto un error HTTP"
         ):
             llm.generate("Hola Athena")
+
+    @patch("src.llm.requests.post")
+    def test_generate_translates_invalid_json_error_to_llm_error(
+        self,
+        mock_post
+    ) -> None:
+        response = Mock()
+        response.status_code = 200
+        response.json.side_effect = requests.exceptions.JSONDecodeError(
+            "JSON inválido.",
+            "",
+            0
+        )
+
+        mock_post.return_value = response
+
+        config = LLMConfig(
+            url="http://servidor-prueba/api/generate",
+            model="modelo-prueba",
+            timeout=30.0
+        )
+
+        llm = LLM(config=config)
+
+        with self.assertRaisesRegex(
+            LLMError,
+            "Ollama ha devuelto una respuesta inválida."
+        ):
+            llm.generate("Hola Athena")
+
+    @patch("src.llm.requests.post")
+    def test_generate_translates_missing_response_to_llm_error(
+        self,
+        mock_post
+    ) -> None:
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {}
+        mock_post.return_value = response
+
+        config = LLMConfig(
+            url="http://servidor-prueba/api/generate",
+            model="modelo-prueba",
+            timeout=30.0
+        )
+
+        llm = LLM(config=config)
+
+        with self.assertRaisesRegex(
+            LLMError,
+            "Ollama ha devuelto una respuesta inválida."
+        ):
+            llm.generate("Hola Athena")
+
+    @patch("src.llm.requests.post")
+    def test_generate_rejects_non_string_response(
+        self,
+        mock_post
+    ) -> None:
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "response": None
+        }
+        mock_post.return_value = response
+
+        config = LLMConfig(
+            url="http://servidor-prueba/api/generate",
+            model="modelo-prueba",
+            timeout=30.0
+        )
+
+        llm = LLM(config=config)
+
+        with self.assertRaisesRegex(
+            LLMError,
+            "Ollama ha devuelto una respuesta inválida."
+        ):
+            llm.generate("Hola Athena")
+
+    @patch("src.llm.requests.post")
+    def test_generate_rejects_blank_response(
+        self,
+        mock_post
+    ) -> None:
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "response": " "
+        }
+        mock_post.return_value = response
+
+        config = LLMConfig(
+            url="http://servidor-prueba/api/generate",
+            model="modelo-prueba",
+            timeout=30.0
+        )
+
+        llm = LLM(config=config)
+
+        with self.assertRaisesRegex(
+            LLMError,
+            "Ollama ha devuelto una respuesta inválida."
+        ):
+            llm.generate("Hola Athena.")
+
+    @patch("src.llm.requests.post")
+    def test_generate_rejects_non_object_json_response(
+        self,
+        mock_post
+    ) -> None:
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = []
+        mock_post.return_value = response
+
+        config = LLMConfig(
+            url="http://servidor-prueba/api/generate",
+            model="modelo-prueba",
+            timeout=30.0
+        )
+
+        llm = LLM(config=config)
+
+        with self.assertRaisesRegex(
+            LLMError,
+            "Ollama ha devuelto una respuesta inválida"
+        ):
+            llm.generate("Hola Athena")

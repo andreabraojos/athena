@@ -56,4 +56,23 @@ class LLM:
                 "Ollama ha devuelto un error HTTP."
             ) from error
 
-        return response.json()["response"]
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError as error:
+            raise LLMError(
+                "Ollama ha devuelto una respuesta inválida."
+            ) from error
+
+        if not isinstance(data, dict) or "response" not in data:
+            raise LLMError(
+                "Ollama ha devuelto una respuesta inválida."
+            )
+
+        response_text = data["response"]
+
+        if not isinstance(response_text, str) or not response_text.strip():
+            raise LLMError(
+                "Ollama ha devuelto una respuesta inválida."
+            )
+
+        return response_text
