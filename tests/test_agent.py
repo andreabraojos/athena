@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 from src.agent import Athena
+from src.llm import LLMError
 
 
 class FakeLLM:
@@ -13,6 +14,13 @@ class FakeLLM:
     def generate(self, prompt: str) -> str:
         self.prompts.append(prompt)
         return "Respuesta simulada"
+
+
+class FailingLLM:
+    def generate(self, prompt: str) -> str:
+        raise LLMError(
+            "No se pudo conectar con Ollama."
+        )
 
 
 class TestAthenaMemoryIntegration(unittest.TestCase):
@@ -317,6 +325,24 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
 
         self.assertEqual(self.llm.prompts, [])
 
-                
-    
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["Hola", "salir"])
+    def test_chat_continues_after_llm_error(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena = Athena(
+            llm=FailingLLM(),
+            memory_path=self.memory_path,
+            tasks_path=self.tasks_path
+        )
 
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: No se pudo conectar con Ollama."
+        )
+        mock_print.assert_any_call(
+            "Athena: Hasta pronto."
+        )

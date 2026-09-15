@@ -3,11 +3,11 @@ import json
 from datetime import date
 
 try:
-    from .llm import LLM
+    from .llm import LLM, LLMError
     from .memory import Memory
     from .tasks import TaskManager
 except ImportError:
-    from llm import LLM
+    from llm import LLM, LLMError
     from memory import Memory
     from tasks import TaskManager
 
@@ -243,7 +243,13 @@ class Athena:
                     print("Athena: Hasta pronto.")
                     break
 
-                respuesta = self.llm.generate(self.build_prompt(pregunta))
+                try:
+                    respuesta = self.llm.generate(
+                        self.build_prompt(pregunta)
+                    )
+                except LLMError as error:
+                    print(f"Athena: {error}")
+                    continue
 
                 print("\nAthena: ", respuesta)
 
