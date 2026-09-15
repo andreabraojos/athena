@@ -57,3 +57,79 @@ Ejecuta la suite completa desde la raíz del repositorio:
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
+
+## Comandos disponibles
+
+| Comando | Función |
+|---|---|
+| `memoria` | Muestra toda la información almacenada en la memoria. |
+| `recuerda clave = valor` | Guarda o actualiza el valor asociado a una clave. |
+| `olvida clave` | Elimina de la memoria el valor asociado a una clave. |
+| `tarea añade título` | Añade una tarea sin fecha de entrega. |
+| `tarea añade título \| YYYY-MM-DD` | Añade una tarea con fecha de entrega. |
+| `tareas` | Muestra todas las tareas guardadas. |
+| `tarea completa id` | Marca como completada la tarea con el identificador indicado. |
+| `tarea elimina id` | Elimina la tarea con el identificador indicado. |
+| `pendientes` | Muestra las tareas que todavía no se han completado. |
+| `hoy` | Muestra las tareas pendientes cuya fecha coincide con la fecha actual. |
+| `salir` | Termina la conversación. |
+
+Cualquier entrada que no coincida con estos comandos se envía al LLM junto con la memoria persistente.
+
+## Demo de extremo a extremo
+
+### Recorrido principal
+
+Inicia Athena con Ollama disponible:
+
+```powershell
+.\.venv\Scripts\python.exe -m src.main
+```
+
+Introduce esta secuencia:
+
+```text
+recuerda persona_demo = Laura
+memoria
+tarea añade leer 1 capítulo para la demo | 2030-12-31
+pendientes
+¿Cómo se llama la persona de la demo?
+tarea elimina ID_DE_LA_TAREA
+olvida persona_demo
+salir
+```
+
+La demo se considera correcta si:
+
+- Athena confirma que ha guardado `persona_demo` y la memoria muestra `persona_demo: Laura`.
+- La tarea aparece como pendiente con su identificador y la fecha `2030-12-31`.
+- La respuesta del LLM identifica a Laura. Su redacción exacta puede variar.
+- Los comandos de eliminación retiran los datos creados durante la demo. Sustituye `ID_DE_LA_TAREA` por el identificador mostrado por `pendientes`.
+- El comando `salir` muestra el mensaje de despedida y termina el chat.
+
+Si ya existen recuerdos o tareas locales, también pueden aparecer en la salida.
+
+### Fallo controlado de Ollama
+
+Configura temporalmente una dirección que no responda e inicia una segunda sesión:
+
+```powershell
+$env:ATHENA_OLLAMA_URL = "http://127.0.0.1:1/api/generate"
+.\.venv\Scripts\python.exe -m src.main
+```
+
+Introduce:
+
+```text
+¿Cuál es la capital de Francia?
+memoria
+salir
+```
+
+La demo se considera correcta si Athena informa de que no puede conectarse con Ollama, el comando `memoria` sigue funcionando y `salir` termina el chat con normalidad.
+
+Restaura la configuración predeterminada para la terminal actual:
+
+```powershell
+Remove-Item Env:ATHENA_OLLAMA_URL
+```
