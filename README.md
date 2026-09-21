@@ -50,6 +50,18 @@ Con Ollama en ejecución y el modelo disponible, inicia Athena desde la raíz de
 
 Escribe `salir` para terminar la sesión.
 
+## Registro de actividad
+
+Athena guarda información técnica sobre las peticiones a Ollama en `data/athena.log`. El archivo se crea automáticamente al iniciar la aplicación y está excluido de Git.
+
+El nivel predeterminado es `INFO`. Se registran datos técnicos como el modelo, el tiempo máximo de espera y si la petición ha finalizado, pero no se guardan los mensajes del usuario, las respuestas de Athena, la memoria ni la URL de Ollama.
+
+Para consultar las últimas entradas en PowerShell:
+
+```powershell
+Get-Content data\athena.log -Encoding utf8
+```
+
 ## Pruebas
 
 Ejecuta la suite completa desde la raíz del repositorio:

@@ -1,9 +1,13 @@
+import logging
+
 import requests
 
 try:
     from .config import LLMConfig, load_llm_config
 except ImportError:
     from config import LLMConfig, load_llm_config
+
+logger = logging.getLogger(__name__)
 
 
 class LLMError(Exception):
@@ -30,7 +34,11 @@ class LLM:
             "stream": False
         }
         
-        print("Enviando petición...")
+        logger.info(
+            "Iniciando petición a Ollama model=%s timeout=%s",
+            self.model,
+            self.timeout
+        )
 
         try:
             response = requests.post(
@@ -39,6 +47,9 @@ class LLM:
                 timeout=self.timeout
             )
         except requests.Timeout as error:
+            logger.error(
+                "La petición a Ollama agotó el tiempo de espera"
+            )
             raise LLMError(
                 "Ollama ha tardado demasiado en responder."
             ) from error
@@ -47,7 +58,10 @@ class LLM:
                 "No se pudo conectar con Ollama."
             ) from error
 
-        print("Código: ", response.status_code)
+        logger.debug(
+            "Ollama ha respondido con código HTTP %s",
+            response.status_code
+        )
 
         try:
             response.raise_for_status()
@@ -74,5 +88,7 @@ class LLM:
             raise LLMError(
                 "Ollama ha devuelto una respuesta inválida."
             )
+
+        logger.info("Petición a Ollama completada")
 
         return response_text

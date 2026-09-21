@@ -46,7 +46,22 @@ class TestLLM(unittest.TestCase):
 
         llm = LLM(config=config)
 
-        result = llm.generate("Hola Athena")
+        with self.assertLogs("src.llm", level="DEBUG") as captured:
+            result = llm.generate("Hola Athena")
+
+        logs = "\n".join(captured.output)
+
+        self.assertIn(
+            "Iniciando petición a Ollama",
+            logs
+        )
+
+        self.assertIn("modelo-prueba", logs)
+        self.assertIn("timeout=30.0", logs)
+        self.assertIn("código HTTP 200", logs)
+        self.assertIn("Petición a Ollama completada", logs)
+        self.assertNotIn("Hola Athena", logs)
+        self.assertNotIn(config.url, logs)
 
         self.assertEqual(
                 result,
@@ -82,11 +97,21 @@ class TestLLM(unittest.TestCase):
         )
         llm = LLM(config=config)
 
-        with self.assertRaisesRegex(
-            LLMError,
-            "Ollama ha tardado demasiado en responder"
-        ):
-            llm.generate("Hola Athena")
+        with self.assertLogs("src.llm", level="ERROR") as captured:
+            with self.assertRaisesRegex(
+                LLMError,
+                "Ollama ha tardado demasiado en responder"
+            ):
+                llm.generate("Hola Athena")
+
+        logs = "\n".join(captured.output)
+
+        self.assertIn(
+            "La petición a Ollama agotó el tiempo de espera",
+            logs
+        )
+        self.assertNotIn("Hola Athena", logs)
+        self.assertNotIn(config.url, logs)
 
     @patch("src.llm.requests.post")
     def test_generate_translates_connection_error_to_llm_error(
