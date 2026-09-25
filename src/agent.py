@@ -6,10 +6,12 @@ try:
     from .llm import LLM, LLMError
     from .memory import Memory
     from .tasks import TaskManager
+    from .registry import ToolRegistry
 except ImportError:
     from llm import LLM, LLMError
     from memory import Memory
     from tasks import TaskManager
+    from registry import ToolRegistry
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -24,16 +26,24 @@ class Athena:
         self,
         llm: LLM | None = None,
         memory_path: Path | None = None, 
-        tasks_path: Path | None = None
+        tasks_path: Path | None = None,
+        registry: ToolRegistry | None = None
     ):
         print("Inicializando Athena...")
         self.llm = llm or LLM()
+
+        self.registry = registry or ToolRegistry()
 
         self.memory = Memory(memory_path or PROJECT_ROOT / "data" / "memory.json")
 
         self.tasks = TaskManager(
             tasks_path or PROJECT_ROOT / "data" / "tasks.json"
         )
+
+        self.registry.register("memoria", self.show_memory)
+        self.registry.register("tareas", self.show_tasks)
+        self.registry.register("pendientes", self.show_pending_tasks)
+        self.registry.register("hoy", self.show_today_tasks)
 
     def build_prompt(self, question: str) -> str:
         """Construye el prompt con el contexto persistente disponible."""
@@ -197,8 +207,7 @@ class Athena:
 
                 comando = pregunta.strip().lower()
 
-                if comando == "memoria":
-                    self.show_memory()
+                if self.registry.execute(comando):
                     continue
 
                 if comando.startswith("recuerda "):
@@ -216,10 +225,6 @@ class Athena:
                     self.add_task(content)
                     continue
 
-                if comando == "tareas":
-                    self.show_tasks()
-                    continue
-
                 if comando == "tarea completa" or comando.startswith("tarea completa "):
                     task_id_text = pregunta.strip()[len("tarea completa"):].strip()
                     self.complete_task(task_id_text)
@@ -229,15 +234,6 @@ class Athena:
                     task_id_text = pregunta.strip()[len("tarea elimina"):].strip()
                     self.delete_task(task_id_text)
                     continue
-
-                if comando == "pendientes":
-                    self.show_pending_tasks()
-                    continue
-
-                if comando == "hoy":
-                    self.show_today_tasks()
-                    continue
-
 
                 if comando == "salir":
                     print("Athena: Hasta pronto.")
