@@ -346,3 +346,59 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
         mock_print.assert_any_call(
             "Athena: Hasta pronto."
         )
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+            side_effect=["olvida color", "salir"])
+    def test_chat_forgets_a_value(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.memory.save("color", "azul")
+
+        self.athena.chat()
+
+        self.assertIsNone(
+            self.athena.memory.get("color")
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+        mock_print.assert_any_call(
+            'Athena: He olvidado "color".'
+        )
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["recuerda persona = Laura", "salir"])
+    def test_chat_remembers_a_value_preserving_original_case(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        self.assertEqual(
+            self.athena.memory.get("persona"),
+            "Laura"
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+        mock_print.assert_any_call(
+            'Athena: He guardado "persona".'
+        )
+
+    @patch("builtins.print")
+    @patch("builtins.input", side_effect=["recuerda", "salir"])
+    def test_chat_handles_remember_without_content(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: recuerda clave = valor"
+        )
+
+        self.assertEqual(self.llm.prompts, [])

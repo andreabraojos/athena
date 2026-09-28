@@ -44,6 +44,14 @@ class Athena:
         self.registry.register("tareas", self.show_tasks)
         self.registry.register("pendientes", self.show_pending_tasks)
         self.registry.register("hoy", self.show_today_tasks)
+        self.registry.register_with_argument(
+            "olvida",
+            self.forget
+        )
+        self.registry.register_with_argument(
+            "recuerda",
+            self.remember
+        )
 
     def build_prompt(self, question: str) -> str:
         """Construye el prompt con el contexto persistente disponible."""
@@ -207,17 +215,7 @@ class Athena:
 
                 comando = pregunta.strip().lower()
 
-                if self.registry.execute(comando):
-                    continue
-
-                if comando.startswith("recuerda "):
-                    content = pregunta.strip()[len("recuerda "):]
-                    self.remember(content)
-                    continue
-
-                if comando == "olvida" or comando.startswith("olvida "):
-                    key = pregunta.strip()[len("olvida"):].strip()
-                    self.forget(key)
+                if self.registry.execute(pregunta):
                     continue
 
                 if comando == "tarea añade" or comando.startswith("tarea añade "):
