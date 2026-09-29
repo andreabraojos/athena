@@ -52,6 +52,18 @@ class Athena:
             "recuerda",
             self.remember
         )
+        self.registry.register_with_argument(
+            "tarea añade",
+            self.add_task
+        )
+        self.registry.register_with_argument(
+            "tarea completa",
+            self.complete_task
+        )
+        self.registry.register_with_argument(
+            "tarea elimina",
+            self.delete_task
+        )
 
     def build_prompt(self, question: str) -> str:
         """Construye el prompt con el contexto persistente disponible."""
@@ -173,7 +185,7 @@ class Athena:
             task_id = int(task_id_text)
             self.tasks.delete(task_id)
         except ValueError:
-            print("Athena: Usa el formato: tarea eliminada id")
+            print("Athena: Usa el formato: tarea elimina id")
             return
         except KeyError:
             print(f'Athena: No existe una tarea con ID {task_id_text}.')
@@ -216,21 +228,6 @@ class Athena:
                 comando = pregunta.strip().lower()
 
                 if self.registry.execute(pregunta):
-                    continue
-
-                if comando == "tarea añade" or comando.startswith("tarea añade "):
-                    content = pregunta.strip()[len("tarea añade"):].strip()
-                    self.add_task(content)
-                    continue
-
-                if comando == "tarea completa" or comando.startswith("tarea completa "):
-                    task_id_text = pregunta.strip()[len("tarea completa"):].strip()
-                    self.complete_task(task_id_text)
-                    continue
-
-                if comando == "tarea elimina" or comando.startswith("tarea elimina "):
-                    task_id_text = pregunta.strip()[len("tarea elimina"):].strip()
-                    self.delete_task(task_id_text)
                     continue
 
                 if comando == "salir":

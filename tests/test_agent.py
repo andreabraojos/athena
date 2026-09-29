@@ -402,3 +402,81 @@ class TestAthenaMemoryIntegration(unittest.TestCase):
         )
 
         self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["tarea añade", "salir"])
+    def test_chat_handles_add_task_without_content(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: "
+            "tarea añade título | YYYY-MM-DD"
+        )
+
+        self.assertEqual(self.athena.tasks.list_all(), [])
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["tarea completa", "salir"])
+    def test_chat_handles_complete_task_without_id(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: tarea completa id"
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["tarea elimina", "salir"])
+    def test_chat_handles_delete_task_without_id(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: tarea elimina id"
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["tarea completa abc", "salir"])
+    def test_chat_handles_non_numeric_task_id(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: Usa el formato: tarea completa id"
+        )
+        self.assertEqual(self.llm.prompts, [])
+
+    @patch("builtins.print")
+    @patch("builtins.input",
+           side_effect=["tarea elimina 999", "salir"])
+    def test_chat_handles_unknown_task_id_when_deleting(
+        self,
+        mock_input,
+        mock_print
+    ) -> None:
+        self.athena.chat()
+
+        mock_print.assert_any_call(
+            "Athena: No existe una tarea con ID 999."
+        )
+        self.assertEqual(self.llm.prompts, [])
