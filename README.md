@@ -70,6 +70,34 @@ Ejecuta la suite completa desde la raíz del repositorio:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
+## Evaluación reproducible
+
+Athena V1 incluye una evaluación determinista de 25 casos que cubre memoria, tareas, enrutado de comandos, fallback y errores del LLM.
+
+La evaluación utiliza archivos temporales, una fecha fija y un LLM simulado. Por tanto:
+
+- no modifica los archivos de `data/`;
+- no necesita que Ollama esté funcionando;
+- obtiene resultados repetibles;
+- termina con código de error si algún caso falla.
+
+Para ejecutarla:
+
+```powershell
+.\.venv\Scripts\python.exe -m evals.run_evaluation
+```
+
+Resultados de referencia de Athena V1:
+
+- memory: 6/6
+- tasks: 11/11
+- routing: 4/4
+- fallback: 2/2
+- errors: 2/2
+- global: 25/25 (100.0%)
+
+Esta evaluación comprueba el comportamiento y el enrutado determinista de Athena. No mide la calidad factual o generativa de un modelo real.
+
 ## Comandos disponibles
 
 | Comando | Función |

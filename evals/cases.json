@@ -1,0 +1,304 @@
+[
+    {
+        "name": "memory_empty",
+        "category": "memory",
+        "inputs": [
+            "memoria"
+        ],
+        "expected_output": [
+            "No tengo recuerdos guardados."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "memory_save_and_show",
+        "category": "memory",
+        "inputs": [
+            "recuerda nombre = Laura",
+            "memoria"
+        ],
+        "expected_output": [
+            "He guardado \"nombre\"",
+            "- nombre: Laura"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "memory_update",
+        "category": "memory",
+        "inputs": [
+            "recuerda ciudad = Madrid",
+            "recuerda ciudad = Valencia",
+            "memoria"
+        ],
+        "expected_output": [
+            "- ciudad: Valencia"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "memory_forget_existing",
+        "category": "memory",
+        "inputs": [
+            "recuerda color = azul",
+            "olvida color",
+            "memoria"
+        ],
+        "expected_output": [
+            "He olvidado \"color\"",
+            "No tengo recuerdos guardados."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "memory_forget_unknown",
+        "category": "memory",
+        "inputs": [
+            "olvida ciudad"
+        ],
+        "expected_output": [
+            "No tengo ningún recuerdo llamado \"ciudad\"."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "memory_invalid_format",
+        "category": "memory",
+        "inputs": [
+            "recuerda nombre"
+        ],
+        "expected_output": [
+            "Usa el formato: recuerda clave = valor"
+        ],
+        "expected_llm_calls": 0
+    },
+        {
+        "name": "tasks_empty",
+        "category": "tasks",
+        "inputs": [
+            "tareas"
+        ],
+        "expected_output": [
+            "No tienes tareas guardadas."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_add_without_due_date",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Leer un capítulo",
+            "tareas"
+        ],
+        "expected_output": [
+            "He añadido la tarea \"Leer un capítulo\".",
+            "- [ ] 1: Leer un capítulo"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_add_with_due_date",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Entregar proyecto | 2030-01-15",
+            "tareas"
+        ],
+        "expected_output": [
+            "- [ ] 1: Entregar proyecto | fecha: 2030-01-15"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_rejects_invalid_date",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Entregar proyecto | 15-01-2030"
+        ],
+        "expected_output": [
+            "Usa el formato: tarea añade título | YYYY-MM-DD"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "tasks_pending_filter",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Tarea completada",
+            "tarea añade Tarea pendiente",
+            "tarea completa 1",
+            "pendientes"
+        ],
+        "expected_output": [
+            "Estas son tus tareas pendientes:",
+            "- [ ] 2: Tarea pendiente"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "tasks_today_filter",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Tarea de hoy | 2030-01-15",
+            "tarea añade Tarea futura | 2030-01-16",
+            "hoy"
+        ],
+        "expected_output": [
+            "Estas son tus tareas para hoy:",
+            "- [ ] 1: Tarea de hoy | fecha: 2030-01-15"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_complete",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Estudiar",
+            "tarea completa 1",
+            "tareas"
+        ],
+        "expected_output": [
+            "He completado la tarea 1.",
+            "- [✓] 1: Estudiar"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_delete",
+        "category": "tasks",
+        "inputs": [
+            "tarea añade Temporal",
+            "tarea elimina 1",
+            "tareas"
+        ],
+        "expected_output": [
+            "He eliminado la tarea 1.",
+            "No tienes tareas guardadas."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_rejects_non_numeric_id",
+        "category": "tasks",
+        "inputs": [
+            "tarea completa abc"
+        ],
+        "expected_output": [
+            "Usa el formato: tarea completa id"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_rejects_unknown_id",
+        "category": "tasks",
+        "inputs": [
+            "tarea completa 999"
+        ],
+        "expected_output": [
+            "No existe una tarea con ID 999."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "task_delete_without_id",
+        "category": "tasks",
+        "inputs": [
+            "tarea elimina"
+        ],
+        "expected_output": [
+            "Usa el formato: tarea elimina id"
+        ],
+        "expected_llm_calls": 0
+    },
+        {
+        "name": "exact_command_ignores_case_and_outer_spaces",
+        "category": "routing",
+        "inputs": [
+            "  MeMoRiA  "
+        ],
+        "expected_output": [
+            "No tengo recuerdos guardados."
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "argument_command_preserves_original_value",
+        "category": "routing",
+        "inputs": [
+            "ReCuErDa alias = AthenaV1",
+            "memoria"
+        ],
+        "expected_output": [
+            "- alias: AthenaV1"
+        ],
+        "expected_llm_calls": 0
+    },
+    {
+        "name": "partial_command_name_falls_back_to_llm",
+        "category": "routing",
+        "inputs": [
+            "olvidado ciudad"
+        ],
+        "expected_output": [
+            "Respuesta simulada"
+        ],
+        "expected_llm_calls": 1
+    },
+    {
+        "name": "exit_does_not_call_llm",
+        "category": "routing",
+        "inputs": [],
+        "expected_output": [
+            "Hasta pronto."
+        ],
+        "expected_llm_calls": 0
+    },
+        {
+        "name": "unknown_input_calls_llm",
+        "category": "fallback",
+        "inputs": [
+            "¿Cuál es la capital de Francia?"
+        ],
+        "expected_output": [
+            "Respuesta simulada"
+        ],
+        "expected_llm_calls": 1
+    },
+    {
+        "name": "multiple_unknown_inputs_call_llm_each_time",
+        "category": "fallback",
+        "inputs": [
+            "Primera pregunta",
+            "Segunda pregunta"
+        ],
+        "expected_output": [
+            "Respuesta simulada"
+        ],
+        "expected_llm_calls": 2
+    },
+    {
+        "name": "llm_error_is_shown",
+        "category": "errors",
+        "inputs": [
+            "Pregunta con fallo"
+        ],
+        "llm_error": "No se pudo conectar con Ollama.",
+        "expected_output": [
+            "Athena: No se pudo conectar con Ollama."
+        ],
+        "expected_llm_calls": 1
+    },
+    {
+        "name": "chat_continues_after_llm_error",
+        "category": "errors",
+        "inputs": [
+            "Pregunta con fallo",
+            "memoria"
+        ],
+        "llm_error": "No se pudo conectar con Ollama.",
+        "expected_output": [
+            "Athena: No se pudo conectar con Ollama.",
+            "No tengo recuerdos guardados."
+        ],
+        "expected_llm_calls": 1
+    }
+]
