@@ -1,15 +1,14 @@
 
-# Qué es athena
+# Athena
 
-Athena es un asistente personal basado en LLM creado para utilizarlo día a día en tareas repetitivas y básicas como apoyo.
+Athena is a Python command-line assistant that uses a local language model through Ollama. It can remember information across sessions and manage tasks with optional due dates.
 
-# Qué objetivo tiene
+# Current features
 
-Ahorrar tiempo en tareas sistemáticas y actuar como asistente personal.
-
-# Qué me gustaría que hiciera en meses
-
-Ser capaz de organizarme los días, viajes, recetas, rutinas de gimnasio, ayudarme a estudiar, etc.
+- **Persistent memory:** Save, view, update, and delete user-provided information across sessions.
+- **Task management:** Create, view, complete, and delete tasks, with optional due dates and views for pending and today's tasks.
+- **Local LLM responses:** Route free-form questions to a model running through Ollama, with saved memory provided as context.
+- **Error handling:** Show a clear message if Ollama fails and keep the terminal session running.
 
 # Requisitos
 
