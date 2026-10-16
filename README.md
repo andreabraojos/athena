@@ -3,12 +3,38 @@
 
 Athena is a Python command-line assistant that uses a local language model through Ollama. It can remember information across sessions and manage tasks with optional due dates.
 
-# Current features
+## Current features
 
 - **Persistent memory:** Save, view, update, and delete user-provided information across sessions.
 - **Task management:** Create, view, complete, and delete tasks, with optional due dates and views for pending and today's tasks.
 - **Local LLM responses:** Route free-form questions to a model running through Ollama, with saved memory provided as context.
 - **Error handling:** Show a clear message if Ollama fails and keep the terminal session running.
+
+## Architecture
+
+```text
+User input
+    |
+    v
+Athena (chat loop)
+    |-- memory/task command --> ToolRegistry --> handler --> Memory / TaskManager
+    |
+    `-- free-form question --> prompt with saved memory --> LLM client --> Ollama
+```
+s
+For recognized memory and task commands, Athena uses the ToolRegistry to run the corresponding handler without consulting Ollama.
+For free-form questions, Athena builds a prompt which includes the stored memory and sends it to the model through Ollama.
+
+## Error handling
+
+The LLM client turns connection, timeout, HTTP, and invalid-response failures into an `LLMError`.
+Athena catches this error, shows a clear message and keeps the session open.
+
+## Limitations
+
+- **Interface:** Athena currently runs from the command line and has no web interface.
+- **Local model:** Free-form questions need Ollama running locally, while memory and task commands keep working even if Ollama does not respond.
+- **Evaluation scope:** The 25 evaluation cases are reproducible and use a simulated LLM. They do not measure the quality of a real model.
 
 # Requisitos
 
