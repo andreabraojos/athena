@@ -21,7 +21,7 @@ Athena (chat loop)
     |
     `-- free-form question --> prompt with saved memory --> LLM client --> Ollama
 ```
-s
+
 For recognized memory and task commands, Athena uses the ToolRegistry to run the corresponding handler without consulting Ollama.
 For free-form questions, Athena builds a prompt which includes the stored memory and sends it to the model through Ollama.
 
