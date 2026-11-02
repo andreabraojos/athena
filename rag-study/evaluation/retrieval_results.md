@@ -77,10 +77,21 @@ primeros; no mejoró la cobertura completa global respecto a V0.
 La restauración de V1 se ejecutó de nuevo y reprodujo sus resultados.
 Las variantes de control se reconstruyeron en memoria sin modificar los
 archivos del buscador. Las comprobaciones y la evaluación se ejecutaron
-durante la sesión; todavía no hay un evaluador persistente ni pruebas de
-recuperación guardadas. Las tres pruebas persistentes de fragmentación
-pasaron, pero no miden la calidad de la búsqueda.
+durante la sesión del 27 de octubre; en esa fecha no había un evaluador
+persistente ni pruebas del buscador guardadas. Las tres pruebas persistentes
+de fragmentación pasaron, pero no miden la calidad de la búsqueda.
 
 No se han evaluado generación de respuestas, latencia ni coste. No hay
-embeddings ni integración con Athena. Antes de más cambios, el siguiente
-paso es guardar pruebas de recuperación y un evaluador reproducible.
+embeddings ni integración con Athena. Al cerrar esa sesión, el siguiente
+paso era guardar pruebas del buscador y un evaluador reproducible.
+
+## Actualización de pruebas — 2 de noviembre de 2026
+
+Se añadieron tres pruebas persistentes en `test_retrieval.py` para la
+preparación de palabras, la puntuación independiente de su posición y la
+ordenación descendente. Pasan junto con las tres pruebas de fragmentación:
+seis en total. No se cambió el código del buscador ni las referencias.
+
+Esta actualización no es una nueva medición de Q01–Q05 ni modifica las
+tablas anteriores. El evaluador reproducible de esas preguntas sigue
+pendiente. El comando para ejecutar las pruebas está en `../README.md`.

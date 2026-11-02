@@ -124,4 +124,26 @@ Para comparar las variantes observamos los tres primeros resultados de cada preg
 
 No son porcentajes de respuestas correctas ni una medida exhaustiva de relevancia. Q05 queda fuera de ese denominador: en todas las variantes devolvió 23 resultados con puntuación cero. No hay abstención ni generación de respuestas.
 
-Las mediciones se ejecutaron durante la sesión y el detalle está en [el informe de recuperación](evaluation/retrieval_results.md). Aún faltan un evaluador persistente y pruebas guardadas de `retrieval.py`; son el siguiente paso antes de más cambios en la búsqueda. Las cinco preguntas se están usando para desarrollo, no como validación independiente.
+Las mediciones se ejecutaron durante la sesión del 27 de octubre y el detalle está en [el informe de recuperación](evaluation/retrieval_results.md). Las cinco preguntas se están usando para desarrollo, no como validación independiente. Las primeras pruebas guardadas del buscador se añadieron el 2 de noviembre, como se describe a continuación; el evaluador persistente de las cinco preguntas sigue pendiente.
+
+## Pruebas del buscador — 2 de noviembre de 2026
+
+`test_retrieval.py` contiene tres pruebas con `unittest`:
+
+- `tokenize` convierte a minúsculas y separa los signos de puntuación y Markdown del ejemplo `¿Un **STACK** sigue LIFO?`.
+- `score_overlap` cuenta las dos coincidencias aunque las palabras estén en posiciones distintas.
+- `retrieve` devuelve los identificadores y puntuaciones en orden descendente, conservando también el resultado de puntuación cero del ejemplo.
+
+Cada prueba compara `actual`, el valor devuelto por la función, con `expected`, el resultado calculado de antemano para el caso. `self.assertEqual(actual, expected)` falla si ambos valores son distintos. Una diferencia obliga a revisar el código y la expectativa; no justifica cambiar esta última únicamente para que la prueba pase.
+
+Para ejecutar todas las pruebas de `rag-study`, desde la carpeta del proyecto Athena:
+
+```powershell
+python -X utf8 -B -m unittest discover -s rag-study -p "test_*.py" -v
+```
+
+Resultado comprobado el 2 de noviembre: seis pruebas pasan, tres de fragmentación y tres del buscador. El comando también se ejecutó desde la terminal de trabajo y devolvió `Ran 6 tests` y `OK`. Las líneas `example.md::0 0` y `example.md::1 2` proceden del `print` de diagnóstico en `score_chunks`, antes de ordenar; la prueba comprueba la lista devuelta después de ordenar.
+
+Como comprobación adicional durante la sesión, se simularon en memoria versiones que dejan signos pegados, comparan palabras solo en la misma posición o no ordenan los resultados. Las pruebas correspondientes detectaron esos fallos, sin modificar el código del buscador.
+
+Estas tres pruebas no cubren todos los casos límite ni miden la calidad de la recuperación de las cinco preguntas. El siguiente bloque es guardar un evaluador reproducible, sin cambiar todavía la búsqueda ni sus referencias.
